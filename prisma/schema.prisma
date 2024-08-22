@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String      @id @default(uuid())
+  email     String      @unique
+  password  String
+  name      String?
+  address   String?
+  role      Role        @default(USER)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+  purchases Purchase[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum CategoryType {
+  ELECTRONICS
+  FURNITURE
+  CLOTHES
+  BOOKS
+  GROCERY
+  TOYS
+  BEAUTY
+}
+
+model Product {
+  id                 String           @id @default(uuid())
+  name               String           @unique
+  urlName            String           @unique
+  picture            String?
+  price              Float
+  discountPercentage Int              @default(0)
+  stock              Int              @default(0)
+  description        String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  purchases          PurchaseProduct[]
+  categories         Category[]       @relation("ProductCategories")
+}
+
+model Category {
+  id          String       @id @default(uuid())
+  type        CategoryType @unique
+  description String?
+  products    Product[]    @relation("ProductCategories")
+}
+
+
+model Purchase {
+  id            String             @id @default(uuid())
+  user          User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId        String?
+  amount        Int?
+  reviewComment String?
+  createdAt     DateTime           @default(now())
+  products      PurchaseProduct[]
+}
+
+model PurchaseProduct {
+  id          String   @id @default(uuid())
+  purchase    Purchase @relation(fields: [purchaseId], references: [id])
+  purchaseId  String
+  product     Product  @relation(fields: [productId], references: [id])
+  productId   String
+  quantity    Int      @default(1)
+  createdAt   DateTime @default(now())
+}
